@@ -1,12 +1,19 @@
 version: '3.4'
 
 volumes:
-    nfsmount:
+    nfsmount_web:
         driver: local
         driver_opts:
             type: nfs
             o: addr=host.docker.internal,rw,noacl,nocto,noatime,nodiratime,soft,nolock,rsize=32768,wsize=32768,intr,tcp,nfsvers=3,actimeo=2
             device: ":${PWD}"
+
+    nfsmount_database:
+        driver: local
+        driver_opts:
+            type: nfs
+            o: addr=host.docker.internal,rw,noacl,nocto,noatime,nodiratime,soft,nolock,rsize=32768,wsize=32768,intr,tcp,nfsvers=3,actimeo=2
+            device: ":${PWD}/.docker/mariadb/data/db"
 
 services:
 
@@ -17,13 +24,47 @@ services:
             - 80:80
         volumes:
             - ./apache2/vhosts:/etc/apache2/sites-enabled:delegated
-            - 'nfsmount:/var/www/html'
+            - 'nfsmount_web:/var/www/html'
 
         depends_on:
             - php
+            - mariadb
 
     php:
         build: php/
         container_name: docker_nfs_php
         volumes:
-          - 'nfsmount:/var/www/html'
+          - 'nfsmount_web:/var/www/html'
+
+        depends_on:
+            - mariadb
+
+    mariadb:
+        image: mariadb:10.4
+        container_name: docker_nfs_mariadb
+        volumes:
+            - ${PWD}/.docker/mariadb/migrations:/docker-entrypoint-initdb.d
+            - 'nfsmount_database:/var/lib/mysql'
+        environment:
+            MYSQL_ROOT_PASSWORD: root
+            MYSQL_DATABASE: nfs
+            MYSQL_USER: nfs
+            MYSQL_PASSWORD: nfs
+        user: mysql
+
+    phpmyadmin:
+        image: phpmyadmin/phpmyadmin
+        container_name: docker_nfs_phpmyadmin
+        environment:
+            PMA_HOST: mariadb
+            PMA_PORT: 3306
+        ports:
+            - 8080:80
+        links:
+            - mariadb
+
+    maildev:
+        image: djfarrelly/maildev
+        container_name: docker_nfs_mailder
+        ports:
+            - 8001:80
