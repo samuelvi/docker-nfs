@@ -9,11 +9,15 @@ RUN apt-get update \
     sudo \
     vim
 
+# INSTALL REDIS
+RUN pecl install redis && docker-php-ext-enable redis
+
 RUN docker-php-ext-install pdo pdo_mysql opcache
 
 COPY conf/php.ini /usr/local/etc/php/php.ini
 COPY conf/php-fpm-pool.conf /usr/local/etc/php/pool.d/www.conf
 COPY conf/opcache.ini /usr/local/etc/php/conf.d/opcache.ini
+#COPY conf/redis.ini /usr/local/etc/php/conf.d/redis.ini
 
 
 ARG UUID

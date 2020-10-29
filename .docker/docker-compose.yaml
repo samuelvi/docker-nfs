@@ -8,7 +8,7 @@ volumes:
             o: addr=host.docker.internal,rw,noacl,nocto,noatime,nodiratime,soft,nolock,rsize=32768,wsize=32768,intr,tcp,nfsvers=3,actimeo=2
             device: ":${PWD}"
 
-    nfsmount_database:
+    nfsmount_mariadb:
         driver: local
         driver_opts:
             type: nfs
@@ -44,7 +44,7 @@ services:
         container_name: docker_nfs_mariadb
         volumes:
             - ${PWD}/.docker/mariadb/migrations:/docker-entrypoint-initdb.d
-            - 'nfsmount_database:/var/lib/mysql'
+            - 'nfsmount_mariadb:/var/lib/mysql'
         environment:
             MYSQL_ROOT_PASSWORD: root
             MYSQL_DATABASE: nfs
@@ -68,3 +68,35 @@ services:
         container_name: docker_nfs_mailder
         ports:
             - 8001:80
+
+    redis:
+        image: redis:alpine
+        container_name: docker_nfs_redis
+        volumes:
+            - ./.docker/redis/data:/data:delegated
+        ports:
+            - "6379:6379"
+
+    rabbit_mq:
+        image: "rabbitmq:3-management"
+        container_name: docker_nfs_rabbit_mq
+        hostname: "rabbit_mq"
+        environment:
+            #RABBITMQ_ERLANG_COOKIE: "SWQOKODSQALRPCLNMEQG"
+            RABBITMQ_DEFAULT_USER: "rabbitmq"
+            RABBITMQ_DEFAULT_PASS: "rabbitmq"
+            RABBITMQ_DEFAULT_VHOST: "/"
+        ports:
+            - "15672:15672"
+            - "5672:5672"
+        labels:
+            NAME: "rabbit_mq"
+      #  volumes:
+            #- "./enabled_plugins:/etc/rabbitmq/enabled_plugins"
+            #- "./rabbitmq.config:/etc/rabbitmq/rabbitmq.config:ro"
+            #- "./autocluster-0.4.1.ez:/usr/lib/rabbitmq/lib/rabbitmq_server-3.5.5/plugins/autocluster-0.4.1.ez"
+
+#        environment:
+#            - REDIS_PASSWORD=password123
+#            - ALLOW_EMPTY_PASSWORD=yes
+

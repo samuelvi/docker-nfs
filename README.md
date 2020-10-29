@@ -10,7 +10,7 @@ pleaseAdjustTheScriptSetupNativeNfsDockerOsxShIfYourSystemVersioisPriorToCatalin
 Step by step set up and run:
 
 - run: bash ./scripts/setup_native_nfs_docker_osx.sh
-- run: bash ./scripts/build.sh
+- run: sudo bash ./scripts/build.sh
 - run: bash ./scripts/up.sh
 - access http://localhost
 
